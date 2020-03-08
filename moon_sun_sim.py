@@ -3,8 +3,6 @@
 # Calculating the Moon position for Hooke Park
 # More example calculations here: https://rhodesmill.org/skyfield/examples.html
 
-from datetime import datetime
-
 LOCATION_NAME = "Hooke Park, UK"
 YEAR = 2020
 MONTH = 3
@@ -12,6 +10,7 @@ DAY = 7
 HOUR = 20
 MIN = 0
 
+from datetime import datetime
 time_t = datetime(YEAR, MONTH, DAY, HOUR, MIN)
 print(time_t)
 
@@ -110,7 +109,7 @@ if location:
    hp = hooke_park.at(t)
    m = hp.observe(moon).apparent()
    s = hp.observe(sun).apparent()
-   
+
    print()
    print(position_angle_of(m.altaz(), s.altaz()))
    print("Moon: ", m.altaz())

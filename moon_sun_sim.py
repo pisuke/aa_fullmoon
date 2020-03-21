@@ -9,21 +9,18 @@ MONTH = 3
 DAY = 7
 HOUR = 20
 MIN = 0
+VERBOSE = False
+DEBUG = False
 
 from datetime import datetime
-time_t = datetime(YEAR, MONTH, DAY, HOUR, MIN)
-print(time_t)
-
 import ephem
 from geopy.geocoders import Nominatim
 from math import degrees as deg
 from skyfield.api import load, Topos
 from skyfield.trigonometry import position_angle_of
+import argparse
+from pyfiglet import Figlet
 
-geolocator = Nominatim(user_agent="moon_sim")
-location = geolocator.geocode(LOCATION_NAME)
-
-format = "%Y-%m-%d %H:%M"
 
 def human_moon(home):
 	# Human-readable names for phases of the moon, taken from:
@@ -55,62 +52,105 @@ def human_moon(home):
 	elif previous_last_quarter < next_new < next_first_quarter < next_full < next_last_quarter:
 		return 'Waning crescent'
 
-if location:
-   print(location.address)
-   print((location.latitude, location.longitude))
-   #print(location.raw)
+def main():
+	global LOCATION_NAME, YEAR, MONTH, DAY, HOUR, MIN, VERBOSE, DEBUG
+	fig = Figlet(font='standard')
+	print(fig.renderText('FullMoon'))
 
-   time_t = datetime(YEAR, MONTH, DAY, HOUR, MIN)
+	parser = argparse.ArgumentParser(description="Full moon calculations")
+	group = parser.add_mutually_exclusive_group()
+	group.add_argument("-v", "--verbose", action="store_true")
+	parser.add_argument("--debug", action="store_true")
+	parser.add_argument("-l","--location", default=LOCATION_NAME, help="name of location")
+	parser.add_argument("-y","--year", default=YEAR, help="year")
+	parser.add_argument("-m","--month", default=MONTH, help="month")
+	parser.add_argument("-d","--day", default=DAY, help="day")
+	parser.add_argument("--hour", default=HOUR, help="hour")
+	parser.add_argument("--min", default=MIN, help="minutes")
 
-   home = ephem.Observer()
-   home.lat, home.lon = location.latitude, location.longitude
+	args = parser.parse_args()
 
-   home.date = time_t
-   #datetime.datetime.utcnow()
+	VERBOSE = args.verbose
+	DEBUG = args.debug
 
-   #print(dir(ephem))
+	LOCATION_NAME = args.location
+	YEAR = int(args.year)
+	MONTH = int(args.month)
+	DAY = int(args.day)
+	HOUR = int(args.hour)
+	MIN = int(args.min)
 
-   moon = ephem.Moon()
-   moon.compute(home)
-   print()
-   print("Moon: ", moon.alt, moon.az)
-   moon_azimuth  = round(deg(float(moon.az)),1)
-   moon_altitude = round(deg(float(moon.alt)),1)
-   moon_illum = round(moon.phase,1)
-   moonrise = ephem.localtime(home.next_rising(moon)).strftime(format)
-   moonset  = ephem.localtime(home.next_setting(moon)).strftime(format)
-   full_moon = ephem.localtime(ephem.next_full_moon(home.date)).strftime(format)
-   moon_phase = human_moon(home)
-   print("moon azimuth / altitude", moon_azimuth, moon_altitude)
-   print("moon illumination", moon_illum)
-   print("next moon rise / full moon", moonrise, full_moon)
-   print("phase: ", moon_phase)
+	if DEBUG:
+		print(args)
 
-   print()
+	time_t = datetime(YEAR, MONTH, DAY, HOUR, MIN)
+	print(time_t)
 
-   sun = ephem.Sun()
-   sun.compute(home)
-   print("Sun: ", sun.alt, sun.az)
-   sun_azimuth  = round(deg(float(sun.az)),1)
-   sun_altitude = round(deg(float(sun.alt)),1)
-   sunrise  = home.previous_rising(sun)
-   sunset   = home.next_setting(sun)
-   print(sunrise, sunset)
-   print("sun  azimuth / altitude", sun_azimuth, sun_altitude)
+	geolocator = Nominatim(user_agent="moon_sim")
+	location = geolocator.geocode(LOCATION_NAME)
+
+	format = "%Y-%m-%d %H:%M"
+
+	if location:
+	   print(location.address)
+	   print((location.latitude, location.longitude))
+	   #print(location.raw)
+
+	   time_t = datetime(YEAR, MONTH, DAY, HOUR, MIN)
+
+	   home = ephem.Observer()
+	   home.lat, home.lon = location.latitude, location.longitude
+
+	   home.date = time_t
+	   #datetime.datetime.utcnow()
+
+	   #print(dir(ephem))
+
+	   moon = ephem.Moon()
+	   moon.compute(home)
+	   print()
+	   print("Moon: ", moon.alt, moon.az)
+	   moon_azimuth  = round(deg(float(moon.az)),1)
+	   moon_altitude = round(deg(float(moon.alt)),1)
+	   moon_illum = round(moon.phase,1)
+	   moonrise = ephem.localtime(home.next_rising(moon)).strftime(format)
+	   moonset  = ephem.localtime(home.next_setting(moon)).strftime(format)
+	   full_moon = ephem.localtime(ephem.next_full_moon(home.date)).strftime(format)
+	   moon_phase = human_moon(home)
+	   print("moon azimuth / altitude", moon_azimuth, moon_altitude)
+	   print("moon illumination", moon_illum)
+	   print("next moon rise / full moon", moonrise, full_moon)
+	   print("phase: ", moon_phase)
+
+	   print()
+
+	   sun = ephem.Sun()
+	   sun.compute(home)
+	   print("Sun: ", sun.alt, sun.az)
+	   sun_azimuth  = round(deg(float(sun.az)),1)
+	   sun_altitude = round(deg(float(sun.alt)),1)
+	   sunrise  = home.previous_rising(sun)
+	   sunset   = home.next_setting(sun)
+	   print(sunrise, sunset)
+	   print("sun  azimuth / altitude", sun_azimuth, sun_altitude)
 
 
-   ts = load.timescale()
-   t = ts.utc(YEAR, MONTH, DAY, HOUR, MIN)
+	   ts = load.timescale()
+	   t = ts.utc(YEAR, MONTH, DAY, HOUR, MIN)
 
-   eph = load('de421.bsp')
-   sun, moon, earth = eph['sun'], eph['moon'], eph['earth']
-   hooke_park = earth + Topos(home.lat, home.lon)
+	   eph = load('de421.bsp')
+	   sun, moon, earth = eph['sun'], eph['moon'], eph['earth']
+	   hooke_park = earth + Topos(home.lat, home.lon)
 
-   hp = hooke_park.at(t)
-   m = hp.observe(moon).apparent()
-   s = hp.observe(sun).apparent()
+	   hp = hooke_park.at(t)
+	   m = hp.observe(moon).apparent()
+	   s = hp.observe(sun).apparent()
 
-   print()
-   print(position_angle_of(m.altaz(), s.altaz()))
-   print("Moon: ", m.altaz())
-   print("Sun:  ", s.altaz())
+	   print()
+	   print(position_angle_of(m.altaz(), s.altaz()))
+	   print("Moon: ", m.altaz())
+	   print("Sun:  ", s.altaz())
+
+
+if __name__ == '__main__':
+	main()

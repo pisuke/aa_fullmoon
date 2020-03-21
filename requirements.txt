@@ -2,3 +2,4 @@ pyorbital
 pyephem
 geopy
 skyfield
+pyfiglet
